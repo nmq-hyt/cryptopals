@@ -13,6 +13,7 @@ fn main() {
 // run through the string, from the right to the left, three bytes at a time, converting each three byte chunk
 // into equivalent four 6 bit (48 bits) base 64
 // using a lookup table.
+// note to self: generating a lookup table is easy if you understand you're looping over two ranges dingus
 
 // it's been so long since i did anything like this
 // i feel so dumb
@@ -58,7 +59,9 @@ fn fixed_xor (buffer_one: Vec<u8>, buffer_two: Vec<u8>) -> Vec<u8> {
 }
 
 // one of the functions for scoring
-// lead into: ETAOIN SHROLDU,
+// possible: replace this function
+// with an increasing n-gram to list all possible n-grams
+// for however feasible a given n-gram is ?
 pub fn most_common_bigram(string: &str) -> () {
     // enforce size ordering by using a btreemap
     // which stores is an ordered map based on a b-tree
@@ -144,11 +147,52 @@ mod tests {
         // 1.3 key derived as it should have been
         // incidence of coincidence calculated to return similarity score with english test
         // took the highest scoring string, then brute forced the key
+
+        // reflection: replacement ciphers preserver the underlying structure of words, while messing up the letters
+        // a ciphertext looks like gibberish, but it's still the same word patterns
+        // so cryptanalysis which measures frequency of letters works because you care about frequencies, things that occurr in all texts
+        // note: monogram fitness (whether the vectors of a given plaintext's language match your cipher text) is an important signal here, because
+        // closeness to frequencies of actual plaintext should be low; it is nothing like the english language
         let input_two = hex::decode("7b5a4215415d544115415d5015455447414c155c46155f4058455c5b523f".to_string()).expect("decoding unsuccessful");
         result_two.extend(input_two.iter().map(|x| x ^ 53));
         println!("{}", String::from_utf8(result_two).unwrap());
     }
 
+    #[test]
+    // move this out of test to a function
+    fn test_repeating_key_xor() {
+        repeating_key_xor_cipher("ICE");
+    
+    }
+
+    fn repeating_key_xor_cipher(string :&str) -> () {
+        // sequentially apply each byte of the key XOR against each given byte of your plaintext
+        // should first find length of plaintext in bytes
+        // rust has the iterator.cycle, which does what we need
+        // but we need to stop somewhere
+        // can track iterations and stop after the length
+        let key: Vec<u8> = string.as_bytes().to_vec();
+        let plaintext: &str = "Burning 'em, if you ain't quick and nimble 
+        I go crazy when I hear a cymbal";
+        let plaintext_length: usize = plaintext.as_bytes().len();
+    
+        // can we zip two iterators together if one is infinite?
+        // docs seems to imply the zipped iterator will eventually yield None
+    
+        let xor_cipher_pass = plaintext
+        .as_bytes()
+        .iter()
+        .zip(key
+            .iter()
+            .cycle()
+        );
+    
+        let ciphertext:Vec<u8> = xor_cipher_pass.map(|element| element.0 ^ element.1).collect();
+        ciphertext.iter().map(|x| print!(" {:x} ", x)).count();
+        let base64_encoded: String = base64ct::Base64::encode_string(&ciphertext);
+        println!("\n{}", base64_encoded);
+    }
+    
     #[test]
     fn testbed_file_opening() {
         let path = Path::new("4.txt");
@@ -223,7 +267,7 @@ mod tests {
     // and can be added together by rule of sums (because you're not choosing different letters at the same time, but you are counting them all)
     // which simplfies as the denominator remains the same
     // possible to extend this to n-grams 
-    // if you extend the summuation form
+    // if you extend the summuation form?
     // as you're trying to pick the same letter from an increasingly smaller string
     //  which i think is calculating factorials?
 
