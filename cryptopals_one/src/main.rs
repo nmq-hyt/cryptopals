@@ -120,8 +120,7 @@ fn frequency_hash_table(s: Vec<u8>) -> HashMap<u8, Decimal> {
 mod tests {
     use std::{ffi::os_str::Display, fs::File, io::{self, BufRead}, path::Path};
 
-    use hex::decode;
-
+    use hex::decode;    
     // rust by example idiom import names from outer scope
     use super::*;
 
@@ -135,6 +134,17 @@ mod tests {
         assert_eq!(fixed_xor(hex::decode("1c0111001f010100061a024b53535009181c".to_string()).expect("failue"), 
         hex::decode("686974207468652062756c6c277320657965".to_string()).expect("fuck")), hex::decode("746865206b696420646f6e277420706c6179").expect("failed to"));
     }
+
+    fn hamming_distance(string_one: String, string_two: String) -> usize {
+       assert_eq!(string_one.len(),string_two.len());
+       return string_one
+       .as_bytes()
+       .into_iter().zip(string_two.as_bytes())
+       .filter(|x| x.0 != x.1)
+       .count();
+       // calculate difference between two strings in characters basis
+    }
+
 
     #[test]
     fn test_single_byte_xor_cipher() {
@@ -159,10 +169,8 @@ mod tests {
     }
 
     #[test]
-    // move this out of test to a function
     fn test_repeating_key_xor() {
         repeating_key_xor_cipher("ICE");
-    
     }
 
     fn repeating_key_xor_cipher(string :&str) -> () {
@@ -228,6 +236,34 @@ mod tests {
             scorekeeper.insert(calculate_index_of_coincidence(&line), line.clone(),);
     }
     scorekeeper.iter().map(|x| println!("{}, {}", x.0, x.1)).count();
+    }
+
+    #[test]
+    fn test_hamming_distance_works_as_expected() {
+        assert_eq!(hamming_distance("eta".to_string(), "etb".to_string()), 1);
+        assert_eq!(hamming_distance("aaa".to_string(), "etb".to_string()), 3);
+
+
+    }
+
+
+    #[test]
+    fn test_break_repeating_key_xor() -> (){
+        let path: &Path = Path::new("6.txt");
+
+        let mut file  = match File::open(&path)  {
+            Err(why) => panic!("could not read file {} because {}", path.to_str().expect("failed to retrieve string representation of path"), why),
+            Ok(file) => file,
+        };
+
+        let binding = io::BufReader::new(file);
+        let file_buffer = binding.buffer();
+        let decrypted_line: &mut [u8] = &mut [];
+        let decode  = base64ct::Base64::decode(file_buffer, decrypted_line);
+        // trying to guess the length of a key
+        let KEYSIZE = Decimal::from_i16(4).expect("failed to create a decimal");
+
+        
     }
 }
 
