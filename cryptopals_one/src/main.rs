@@ -54,8 +54,6 @@ fn fixed_xor (buffer_one: Vec<u8>, buffer_two: Vec<u8>) -> Vec<u8> {
     assert_eq!(buffer_one.len(), buffer_two.len());
     let result: Vec<u8> = buffer_one.iter().zip(buffer_two.iter()).map(|f| f.0 ^ f.1).collect();
     return result;
-
-
 }
 
 // one of the functions for scoring
@@ -79,11 +77,9 @@ pub fn most_common_bigram(string: &str) -> () {
 }
 
 pub fn calculate_index_of_coincidence(string: &str) -> Decimal {
-    // this is done entirely by index of coincidence
-    // highest scoring entry is brute forced is how i got the solution
     // calculated by summation of n choose 2 for each element of the alphabet
     // divided by n choose two 2, with this n being the length of the text 
-    let bytes = hex::decode(string).unwrap();
+    let bytes = string.as_bytes().to_vec();
     let length = Decimal::from(bytes.len());
     let freq_counts = frequency_hash_table(bytes);
     // let mut frequency_pair = freq_counts.clone();
@@ -118,7 +114,7 @@ fn frequency_hash_table(s: Vec<u8>) -> HashMap<u8, Decimal> {
 
 }
 mod tests {
-    use std::{ffi::os_str::Display, fs::File, io::{self, BufRead}, path::Path};
+    use std::{f32::consts::LN_10, ffi::os_str::Display, fs::{self, File}, io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write}, ops::Index, path::Path, string, vec};
 
     use hex::decode;    
     // rust by example idiom import names from outer scope
@@ -135,14 +131,22 @@ mod tests {
         hex::decode("686974207468652062756c6c277320657965".to_string()).expect("fuck")), hex::decode("746865206b696420646f6e277420706c6179").expect("failed to"));
     }
 
-    fn hamming_distance(string_one: String, string_two: String) -> usize {
+    fn brute_force_xor(text:Vec<u8>)  {
+        for i in 0u8 .. 40 {
+            println!("XOR KEY {}\n {}", i, &String::from_utf8(text.iter().map( |x| x ^ i).collect()).unwrap());
+        }
+
+    }
+
+    fn hamming_distance(string_one: String, string_two: String) -> u32{
        assert_eq!(string_one.len(),string_two.len());
        return string_one
        .as_bytes()
        .into_iter().zip(string_two.as_bytes())
-       .filter(|x| x.0 != x.1)
-       .count();
-       // calculate difference between two strings in characters basis
+       .map(|x|(x.0 ^ x.1).count_ones())
+       .sum();
+    // correction: it's counting bit differences 
+    // for which the compiler has a handy builtin
     }
 
 
@@ -240,30 +244,44 @@ mod tests {
 
     #[test]
     fn test_hamming_distance_works_as_expected() {
-        assert_eq!(hamming_distance("eta".to_string(), "etb".to_string()), 1);
-        assert_eq!(hamming_distance("aaa".to_string(), "etb".to_string()), 3);
-
-
+        assert_eq!(hamming_distance("eta".to_string(), "etb".to_string()), 2);
+        assert_eq!(hamming_distance("aaa".to_string(), "etb".to_string()), 6);
+        assert_eq!(hamming_distance("this is a test".to_string(), "wokka wokka!!!".to_string()), 37);
     }
 
 
     #[test]
     fn test_break_repeating_key_xor() -> (){
         let path: &Path = Path::new("6.txt");
-
-        let mut file  = match File::open(&path)  {
-            Err(why) => panic!("could not read file {} because {}", path.to_str().expect("failed to retrieve string representation of path"), why),
-            Ok(file) => file,
-        };
-
-        let binding = io::BufReader::new(file);
-        let file_buffer = binding.buffer();
-        let decrypted_line: &mut [u8] = &mut [];
-        let decode  = base64ct::Base64::decode(file_buffer, decrypted_line);
-        // trying to guess the length of a key
-        let KEYSIZE = Decimal::from_i16(4).expect("failed to create a decimal");
-
+        let bytes: Vec<u8> = fs::read(path).unwrap();
+        // let mut two_string: Vec<u8> = vec![0; string.len()];
+        // base64ct::Base64::decode(&mut string, &mut two_string).expect("failed to decode");
         
+
+        let mut keysize_guess: BTreeMap<u32, usize> = BTreeMap::new();
+
+        for i in 2..200{
+            let first_half = &bytes[0 .. (i - 1)];
+            let second_half = &bytes[i  .. ((i*2) - 1)];
+            let distance = hamming_distance(String::from_utf8(first_half.to_vec()).unwrap(), 
+                String::from_utf8(second_half.to_vec()).unwrap()) / i as u32;
+            keysize_guess.insert(distance, i);
+        }
+        println!("best keysize guesses {} {} {}", keysize_guess.pop_first().expect("dad").1, keysize_guess.pop_first().expect("cool").1,keysize_guess.pop_first().expect("dad").1);
+        // VECTOR of vectors
+        // map through chunks, adding nth byte to nth vector
+        let key_size_guess = 3;
+        let mut list_of_list: Vec<Vec<u8>> = Vec::new();
+        for i in 0..key_size_guess {
+            list_of_list.push(Vec::new());
+        }
+        // slightly ugly way of transposing
+        bytes.chunks(key_size_guess).map(|f| for i in 0..key_size_guess {
+            list_of_list[i].push(f[i]);
+        }).count();
+        list_of_list.iter().next();
+        brute_force_xor(list_of_list.iter().next().unwrap().to_vec());
+
     }
 }
 
