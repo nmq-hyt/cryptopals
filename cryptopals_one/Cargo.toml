@@ -7,4 +7,4 @@ edition = "2024"
 crypto-bigint = "0.6.1"
 base64ct = {version = "1.8.0", features = ["alloc"]}
 hex = "0.4.3"
-rust_decimal = "1.39.0"
+rust_decimal = {version = "1.39.0", features = ["maths", "macros"]}
