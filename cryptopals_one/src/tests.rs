@@ -66,38 +66,39 @@ fn brute_force_single_byte_xor(text:Vec<u8>) ->  u8{
         dec!(0.0145984), dec!(0.0007836),
     
         // 123–255
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(1), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
-        dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        dec!(0), dec!(0), dec!(0), dec!(0)
+
+        // , dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(1), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
+        // dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0), dec!(0),
     ];
     
     // note to self after transposing
     // solve each block as if single character xor, which we do 
     // then combine all of these keys into the singular xor key
     // figure out the letters freq part, lmao
-
-    for i in 0u8.. 255{
+    for i in 0u8.. 127{
         let xor_text: Vec<u8> = text.clone().iter().map(|x| x ^ i).collect();
         let values: Vec<Decimal> = frequency_hash_table(xor_text).clone().into_values().collect();
         let score = angle_between_vectors(freqs.clone(), values);
         scorekeeper.insert(score, i);
- 
     }
+
     return *scorekeeper.last_key_value().expect("msg").1;
 }
 
@@ -113,6 +114,18 @@ fn hamming_distance(string_one: &[u8], string_two: &[u8]) -> u32{
 // for which the compiler has a handy builtin (count the ones after xor on strings, i.e. count the differnences!)
 }
 
+pub fn aes_in_ecb(text:Vec<u8> ) {
+    // implement aes
+    let BLOCK_SIZE = 128;
+    let KEY_SIZE = 128;
+    let key = "YELLOW SUBMARINE";
+
+
+
+
+
+}
+
 
 #[test]
 fn test_single_byte_xor_cipher() {
@@ -123,6 +136,7 @@ fn test_single_byte_xor_cipher() {
     let mut result_two = result_one.clone();
     result_one.extend(input_one.iter().map(|x| x ^ 88));
     println!("{}", String::from_utf8(result_one).unwrap());  
+    assert_eq!(brute_force_single_byte_xor(input_one), 88);
     // 1.3 key derived as it should have been
     // incidence of coincidence calculated to return similarity score with english test
     // took the highest scoring string, then brute forced the key
@@ -171,41 +185,41 @@ fn repeating_key_xor_cipher(string :&str) -> () {
 }
 
 #[test]
-fn testbed_file_opening() {
-    let path = Path::new("4.txt");
-    // much like when i used elixir 
-    // we see the switch statement!
-    // i actually really like this syntax, it was  one of the best things about elixir when i extremely briefly used it
+// fn testbed_file_opening() {
+//     let path = Path::new("4.txt");
+//     // much like when i used elixir 
+//     // we see the switch statement!
+//     // i actually really like this syntax, it was  one of the best things about elixir when i extremely briefly used it
 
-    let mut file  = match File::open(&path)  {
-        Err(why) => panic!("could not read file {} because {}", path.to_str().expect("failed to retrieve string representation of path"), why),
-        Ok(file) => file,
-    };
+//     let mut file  = match File::open(&path)  {
+//         Err(why) => panic!("could not read file {} because {}", path.to_str().expect("failed to retrieve string representation of path"), why),
+//         Ok(file) => file,
+//     };
 
-    // let file: File = File::open(path)?;
-    // create a buffered reader on a file, and split it into component limnes
-    let lines_iterator = io::BufReader::new(file).lines();
-    // you get a result from a bunch of different std crate things, usually IO
-    // several parts of the library are aware of this
-    // you must use results.
-    // you can generally expect to unwrap it
-    // but it's worth matching on the error case explicitly
+//     // let file: File = File::open(path)?;
+//     // create a buffered reader on a file, and split it into component limnes
+//     let lines_iterator = io::BufReader::new(file).lines();
+//     // you get a result from a bunch of different std crate things, usually IO
+//     // several parts of the library are aware of this
+//     // you must use results.
+//     // you can generally expect to unwrap it
+//     // but it's worth matching on the error case explicitly
     
-    //WOOPS! btreemap sorts by key order.
-    // and it doesn't implement Ord for f32 
+//     //WOOPS! btreemap sorts by key order.
+//     // and it doesn't implement Ord for f32 
 
-    // replace it with something which supports very small decimal numbers
-    // okay i don't entirely know enough of the top of my head
-    // to have an opinion on floats vs fixed-point
-    // but if we're real this is one of the areas where this seriously matters
-    let mut scorekeeper: BTreeMap<Decimal, String> = BTreeMap::new();
-     for line in lines_iterator{
-        let mut line = line.expect("failed to read line");
-        println!("{}", line);
-        scorekeeper.insert(calculate_index_of_coincidence(&line), line.clone(),);
-}
-scorekeeper.iter().map(|x| println!("{}, {}", x.0, x.1)).count();
-}
+//     // replace it with something which supports very small decimal numbers
+//     // okay i don't entirely know enough of the top of my head
+//     // to have an opinion on floats vs fixed-point
+//     // but if we're real this is one of the areas where this seriously matters
+//     let mut scorekeeper: BTreeMap<Decimal, String> = BTreeMap::new();
+//      for line in lines_iterator{
+//         let mut line = line.expect("failed to read line");
+//         println!("{}", line);
+//         scorekeeper.insert(calculate_index_of_coincidence(&line), line.clone(),);
+// }
+// scorekeeper.iter().map(|x| println!("{}, {}", x.0, x.1)).count();
+// }
 
 #[test]
 fn test_hamming_distance_works_as_expected() {
@@ -233,7 +247,6 @@ fn test_hamming_distance_works_as_expected() {
             let distance = hamming_distance(first_half, second_half) + hamming_distance(third_half, fourth_half);
             let distance = distance / 2;
             let normalized = distance  / (i) as u32;
-            println!("{} {}", normalized, i);
             keysize_scores.push((normalized,i));
         }
         // Sort by normalized distance
@@ -243,14 +256,18 @@ fn test_hamming_distance_works_as_expected() {
         // map through chunks, adding nth byte to nth vector
 
         let mut list_of_list: Vec<Vec<u8>> = Vec::new();
-        let keysize_guess = 5; 
+        let keysize_guess = 31; 
         for  _i in 0..keysize_guess {
             list_of_list.push(Vec::new());
         }
             // slightly ugly way of transposing
-            bytes.chunks_exact(keysize_guess).map(|f: &[u8]| for i in 0..keysize_guess{
-                list_of_list[i].push(f[i]);
-            }).count();
+            bytes
+            .chunks_exact(keysize_guess)
+            .for_each(|f| {
+                for i in 0..keysize_guess {
+                    list_of_list[i].push(f[i]);
+                }
+            });
 
         let key:Vec<u8> = list_of_list.iter().map(|f| brute_force_single_byte_xor(f.to_vec())).collect();
         println!("{}", String::from_utf8_lossy(&key));

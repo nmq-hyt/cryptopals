@@ -67,28 +67,23 @@ pub fn most_common_bigram(string: &str) -> () {
     println!("{}", map.last_key_value().expect("FREE").0);
 }
 
-pub fn calculate_index_of_coincidence(string: &str) -> Decimal {
+pub fn calculate_index_of_coincidence(string: &Vec<u8>) -> Decimal {
     // calculated by summation of n choose 2 for each element of the alphabet
     // divided by n choose two 2, with this n being the length of the text 
-    let bytes = string.as_bytes().to_vec();
+    let bytes = string.to_vec();
     let length = Decimal::from(bytes.len());
     let freq_counts = frequency_hash_table(bytes);
-    let mut frequency_pair = freq_counts.clone();
-    for (u8,f32) in frequency_pair.iter_mut() {
-        *f32 = *f32 / length;
-        }
-
 
     let numerator_of_ioc: Decimal = freq_counts.into_values()
     .map(|f| (f ) * ((f) - Decimal::ONE)).sum();
-    let alphabet_normalization = Decimal::from_i16(28).unwrap();
-    let ioc =  numerator_of_ioc / (length * (length- Decimal::ONE)/ alphabet_normalization);
+    let alphabet_normalization = Decimal::from_i16(255).unwrap();
+    let ioc =  numerator_of_ioc / ((length * (length- Decimal::ONE))/ alphabet_normalization);
     return ioc;
 }
 
-pub fn frequency_hash_table(s: Vec<u8>) -> HashMap<u8, Decimal> {
-    let mut counts: HashMap<u8, Decimal> = HashMap::new();
-        for i in 0..= 255{
+pub fn frequency_hash_table(s: Vec<u8>) -> BTreeMap<u8, Decimal> {
+    let mut counts: BTreeMap<u8, Decimal> = BTreeMap::new();
+        for i in 0..= 127{
         counts.insert(i, Decimal::ZERO);
     }
 
@@ -100,7 +95,9 @@ pub fn frequency_hash_table(s: Vec<u8>) -> HashMap<u8, Decimal> {
         *counts.entry(*i).or_insert(Decimal::ZERO) += Decimal::ONE;
     }
 
-    counts.values().map(|f| f / Decimal::from(s.len())).count();
+    for element in counts.values_mut() {
+        *element = *element / Decimal::from(s.len());
+    }
     
     counts
 
